@@ -1,0 +1,41 @@
+{
+  "author": {
+    "name": "Scott Smereka"
+  },
+  "bugs": {
+    "url": "http://github.com/ssmereka/crucial/issues"
+  },
+  "contributors": [],
+  "dependencies": {
+    "crave": "0.0.x",
+    "crucial": "git+https://github.com/ssmereka/crave.git#HEAD",
+    "express": "^4.10.1",
+    "mongoose": "3.8.x"
+  },
+  "description": "Simple example on how to use the npm module Crucial.",
+  "devDependencies": {},
+  "engines": {
+    "node": ">=0.10"
+  },
+  "keywords": [
+    "crud",
+    "model",
+    "dynamic",
+    "mongoose",
+    "methods",
+    "example"
+  ],
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/ssmereka/crucial/blob/master/license"
+    }
+  ],
+  "name": "crucial-example-simple",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ssmereka/crucial.git"
+  },
+  "version": "0.0.1"
+}
