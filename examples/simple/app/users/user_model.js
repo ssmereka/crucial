@@ -13,6 +13,7 @@ module.exports = function(app, config) {
   var User = new db.Schema({
     activated: { type: Boolean, default: false },
     dateCreated: { type: Date, default: Date.now },
+    deleted: { type: Boolean, default: false },
     roles: [{ type: ObjectId }],
     username: String,
     passwordHash: String

@@ -7,6 +7,7 @@
   },
   "contributors": [],
   "dependencies": {
+    "body-parser": "^1.11.0",
     "crave": "0.0.x",
     "crucial": "git+https://github.com/ssmereka/crave.git#HEAD",
     "express": "^4.10.1",

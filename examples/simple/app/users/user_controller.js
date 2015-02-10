@@ -15,6 +15,11 @@ module.exports = function (app, config) {
 
   // A route to add a new user to the database.
   app.post('/users', function(req, res, next) {
+
+    console.log("BODY:!");
+    console.log(req.body);
+    req.user = "578972a2c8a826d43a261abc";
+
     var user = new User();
     user.update(req.body, req.user, function(err, user) {
       res.send(err || user);
@@ -27,9 +32,39 @@ module.exports = function (app, config) {
       if(err) {
         res.send(err);
       } else if( ! user){
-        res.send("User with id " + req.param.id + " was not found.");
+        res.send("User with id " + req.params.id + " was not found.");
       } else {
         user.update(req.body, req.user, function(err, user) {
+          res.send(err || user);
+        });
+      }
+    });
+  });
+
+  // Route to delete an existing user in the database.
+  app.delete('/users/:id/purge', function(req, res, next) {
+    User.findById(req.params.id, function(err, user) {
+      if(err) {
+        res.send(err);
+      } else if( ! user){
+        res.send("User with id " + req.params.id + " was not found.");
+      } else {
+        user.purge(req.user, function(err, user) {
+          res.send(err || user);
+        });
+      }
+    });
+  });
+
+  // Route to delete an existing user in the database.
+  app.post('/users/:id/undelete', function(req, res, next) {
+    User.findById(req.params.id, function(err, user) {
+      if(err) {
+        res.send(err);
+      } else if( ! user){
+        res.send("User with id " + req.params.id + " was not found.");
+      } else {
+        user.undelete(req.user, function(err, user) {
           res.send(err || user);
         });
       }
@@ -42,13 +77,15 @@ module.exports = function (app, config) {
       if(err) {
         res.send(err);
       } else if( ! user){
-        res.send("User with id " + req.param.id + " was not found.");
+        res.send("User with id " + req.params.id + " was not found.");
       } else {
-        user.remove(req.body, req.user, function(err, user) {
-          res.send(err || true);
+        user.delete(req.user, function(err, user) {
+          res.send(err || user);
         });
       }
     });
   });
+
+
 
 };

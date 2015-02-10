@@ -1,5 +1,6 @@
-var express = require('express'),
-    crave = require('crave');
+var crave = require('crave'),
+    express = require('express'),
+    bodyParser = require('body-parser'),
     mongoose = require('mongoose'),
     path = require('path');
 
@@ -11,6 +12,9 @@ var config = {
 
 // Create an express application object.
 var app = express();
+
+// Only parse bodies with json, "Content-Type: application/json"
+app.use(bodyParser.json());
 
 // Method to connect to a MongoDB database.
 var connect = function(callback) {
