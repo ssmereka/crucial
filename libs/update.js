@@ -172,7 +172,7 @@ function makeUpdatePropertyMethod(key, type) {
         }
         break;
       case 'ObjectID':
-        value = sanitize.objectId(newValue);
+        value = newValue;
         break;
       case 'String':
         if(_.isString) {
