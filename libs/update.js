@@ -78,6 +78,14 @@ var update = function(updateMethods) {
 
     log.t("User "+userId+" is updating schema object.");
 
+    // Set the lastUpdatedBy field
+    if(userId) {
+      if(userId._id) {
+        userId = userId._id;
+      }
+      obj.lastUpdatedBy = userId;
+    }
+
     // Loop through each validation method updating the
     // current object when the user input is valid.
     for(var i = updateMethods.length-1; i >= 0; --i) {
