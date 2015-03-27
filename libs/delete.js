@@ -3,7 +3,7 @@
  * ************************************************** */
 
 var config,
-    log;
+  log;
 
 var Delete = function(_config, _log) {
   initialize(_config, _log);
@@ -46,8 +46,8 @@ var deleteMethod = function(userId, next) {
 
   log.t("User "+userId+" is deleting schema object.");
 
-  if(obj[config.deletedPropertyName] === false) {
-    obj[config.deletedPropertyName] = true;
+  if(obj[config.delete.deletedPropertyName] === false) {
+    obj[config.delete.deletedPropertyName] = true;
     obj.save(next);
   } else {
     log.t("Object is already deleted.");
@@ -77,8 +77,8 @@ var undelete = function(userId, next) {
 
   log.t("User "+userId+" is undeleting schema object.");
 
-  if(obj[config.deletedPropertyName] === true) {
-    obj[config.deletedPropertyName] = false;
+  if(obj[config.delete.deletedPropertyName] === true) {
+    obj[config.delete.deletedPropertyName] = false;
     obj.save(next);
   } else {
     log.t("Object is already undeleted.");
