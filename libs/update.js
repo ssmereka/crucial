@@ -3,9 +3,13 @@
  * ******************** Constructor & Globals
  * ************************************************** */
 
-var config,
-    log,
-    _ = require('lodash');
+var async = require('async'),
+  config,
+  log,
+  _ = require('lodash');
+
+var hashPattern = /(.*)Hash$/;
+var passwordPattern = /^password$/;
 
 var Update = function(_config, _log) {
   initialize(_config, _log);
@@ -63,7 +67,43 @@ var createMongooseMethod = function(schema) {
     }
   }
 
-  return update(updateMethods);
+  // Create the virtual attribute map and return the model's new update method.
+  return update(updateMethods, createSetVirtualMap(schema));
+};
+
+/**
+ * Create an object that maps virtual attributes to
+ * asynchronous setter methods, if available.
+ * @param schema is the Model's schema object.
+ * @returns {Object} an object with attributes as keys and setter methods as their values.
+ */
+var createSetVirtualMap = function(schema) {
+  if( ! schema || ! schema.virtuals) {
+    return {};
+  }
+
+  var virtualMethods = {};
+
+  for(var attribute in schema.virtuals) {
+    if(schema.virtuals.hasOwnProperty(attribute)) {
+      var methodName = 'set' + capitalizeFirstLetter(attribute);
+      if(schema.methods[methodName] != undefined) {
+        log.t("Adding virtual method: %s", methodName);
+        virtualMethods[attribute] = methodName;
+      }
+    }
+  }
+
+  return virtualMethods;
+};
+
+/**
+ * Capitalize the first letter of a string and return it.
+ * @param {String} s is the string to be capitalized.
+ * @returns {string} the capitalized string.
+ */
+var capitalizeFirstLetter = function(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
 };
 
 /**
@@ -72,7 +112,7 @@ var createMongooseMethod = function(schema) {
  * through each validation method in the updateMethod list.
  * Finally the object is saved if changes were made.
  */
-var update = function(updateMethods) {
+var update = function(updateMethods, virtualMethodMap) {
   return function(newObj, userId, next) {
     var obj = this;
 
@@ -92,10 +132,40 @@ var update = function(updateMethods) {
       obj = updateMethods[i](obj, newObj);
     }
 
-    // Save the object and return the result to the callback.
-    this.save(next);
+    // Asynchronously call each virtual setter method for any
+    // virtual attribute included in the update object.
+    var tasks = [];
+    for(var key in virtualMethodMap) {
+      if(virtualMethodMap.hasOwnProperty(key) && virtualMethodMap[key] !== undefined && newObj[key] !== undefined) {
+        tasks.push(updateVirtualMethod(obj, virtualMethodMap[key], newObj[key]));
+      }
+    }
+
+    // Run the asynchronous tasks.
+    async.series(tasks, function(err, results) {
+      if(err) {
+        next(err);
+      } else {
+        obj.save(next);
+      }
+    });
   };
 };
+
+/**
+ * Create an update virtual attribute method for use with
+ * the async library.
+ * @param obj is the model object to be updated.
+ * @param method is the setter method to be called.
+ * @param value is the potential new value for the virtual attribute.
+ * @returns {Function} the update method.
+ */
+var updateVirtualMethod = function(obj, method, value) {
+  return function (cb) {
+    obj[method](value, cb);
+  }
+};
+
 
 /**
  * Create a method to update a schema's properties based
@@ -146,6 +216,9 @@ function makeUpdatePropertyMethod(key, type) {
 
     // Otherwise, check if the value is valid
     var value = undefined;
+
+    //console.log(property + ": " + newValue);
+
 
     log.t("Update: " + type + " " + newValue);
 
@@ -229,41 +302,39 @@ exports = Update;
  */
 /*
 
-var updateRoute = function(isSanitized) {
-  return function(req, res, next) {
-    // If the CRUD request is already handled, move on.
-    if(isCrudRequestHandled(req)) {
-      log.t(traceHeader, "updateRoute: CRUD route is already handled, skipping this route method.", trace);
-      return next();
-    }
+ var updateRoute = function(isSanitized) {
+ return function(req, res, next) {
+ // If the CRUD request is already handled, move on.
+ if(isCrudRequestHandled(req)) {
+ log.t(traceHeader, "updateRoute: CRUD route is already handled, skipping this route method.", trace);
+ return next();
+ }
 
-    // Retrieve the object to update from the query result.
-    var obj = req.queryResult;
+ // Retrieve the object to update from the query result.
+ var obj = req.queryResult;
 
-    // If there wasn't a result, move on.
-    if( ! obj) {
-      return next();
-    }
+ // If there wasn't a result, move on.
+ if( ! obj) {
+ return next();
+ }
 
-    // Update the object using the request body and currently authenticated user.
-    obj.update(req.body, (req.user) ? req.user._id : undefined, function(err, obj) {
-      // If an error occurred, pass it on.
-      if(err) {
-        return next(err);
-      }
+ // Update the object using the request body and currently authenticated user.
+ obj.update(req.body, (req.user) ? req.user._id : undefined, function(err, obj) {
+ // If an error occurred, pass it on.
+ if(err) {
+ return next(err);
+ }
 
-      // Remove private properties in the object.
-      obj = sanitizeObject(obj, isSanitized);
+ // Remove private properties in the object.
+ obj = sanitizeObject(obj, isSanitized);
 
-      // Mark the CRUD request as handled.
-      setCrudRequestHandled(req);
+ // Mark the CRUD request as handled.
+ setCrudRequestHandled(req);
 
-      // Set the response object to the updated object.
-      sender.setResponse(obj, req, res, next);
-    });
-  };
-}
+ // Set the response object to the updated object.
+ sender.setResponse(obj, req, res, next);
+ });
+ };
+ }
 
-*/
-
-
+ */
