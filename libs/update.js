@@ -126,6 +126,8 @@ var update = function(updateMethods, virtualMethodMap) {
       obj.lastUpdatedBy = userId;
     }
 
+    obj.lastUpdated = Date.now();
+
     // Loop through each validation method updating the
     // current object when the user input is valid.
     for(var i = updateMethods.length-1; i >= 0; --i) {
