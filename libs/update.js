@@ -114,7 +114,8 @@ var capitalizeFirstLetter = function(s) {
  */
 var update = function(updateMethods, virtualMethodMap) {
   return function(newObj, userId, next) {
-    var obj = this;
+    var obj = this,
+      originalObject = JSON.parse(JSON.stringify(obj));
 
     log.t("User "+userId+" is updating schema object.");
 
@@ -148,10 +149,39 @@ var update = function(updateMethods, virtualMethodMap) {
       if(err) {
         next(err);
       } else {
-        obj.save(next);
+
+        preSave(originalObject, obj, function(err, obj) {
+          if(err) {
+            next(err);
+          } else {
+            obj.save(function(err, obj) {
+              if(err) {
+                next(err);
+              } else {
+                postSave(originalObject, obj, next);
+              }
+            });
+          }
+        });
       }
     });
   };
+};
+
+var preSave = function(originalObject, newObject, cb) {
+  if(newObject['preUpdate']) {
+    newObject.preUpdate(originalObject, newObject, cb);
+  } else {
+    cb(undefined, newObject);
+  }
+};
+
+var postSave = function(originalObject, newObject, cb) {
+  if(newObject['postUpdate']) {
+    newObject.postUpdate(originalObject, newObject, cb);
+  } else {
+    cb(undefined, newObject);
+  }
 };
 
 /**
