@@ -117,68 +117,79 @@ var update = function(updateMethods, virtualMethodMap) {
     var obj = this,
       originalObject = JSON.parse(JSON.stringify(obj));
 
-    log.t("User "+userId+" is updating schema object.");
+    preUpdate(obj, newObj, userId, function(err, newObj) {
 
-    // Set the lastUpdatedBy field
-    if(userId) {
-      if(userId._id) {
-        userId = userId._id;
+      log.t("User " + userId + " is updating schema object.");
+
+      // Set the lastUpdatedBy field
+      if(userId) {
+        if(userId._id) {
+          userId = userId._id;
+        }
+        obj.lastUpdatedBy = userId;
       }
-      obj.lastUpdatedBy = userId;
-    }
 
-    obj.lastUpdated = Date.now();
+      obj.lastUpdated = Date.now();
 
-    // Loop through each validation method updating the
-    // current object when the user input is valid.
-    for(var i = updateMethods.length-1; i >= 0; --i) {
-      obj = updateMethods[i](obj, newObj);
-    }
-
-    // Asynchronously call each virtual setter method for any
-    // virtual attribute included in the update object.
-    var tasks = [];
-    for(var key in virtualMethodMap) {
-      if(virtualMethodMap.hasOwnProperty(key) && virtualMethodMap[key] !== undefined && newObj[key] !== undefined) {
-        tasks.push(updateVirtualMethod(obj, virtualMethodMap[key], newObj[key]));
+      // Loop through each validation method updating the
+      // current object when the user input is valid.
+      for(var i = updateMethods.length - 1; i >= 0; --i) {
+        obj = updateMethods[i](obj, newObj);
       }
-    }
 
-    // Run the asynchronous tasks.
-    async.series(tasks, function(err, results) {
-      if(err) {
-        next(err);
-      } else {
-
-        preSave(originalObject, obj, function(err, obj) {
-          if(err) {
-            next(err);
-          } else {
-            obj.save(function(err, obj) {
-              if(err) {
-                next(err);
-              } else {
-                postSave(originalObject, obj, next);
-              }
-            });
-          }
-        });
+      // Asynchronously call each virtual setter method for any
+      // virtual attribute included in the update object.
+      var tasks = [];
+      for(var key in virtualMethodMap) {
+        if(virtualMethodMap.hasOwnProperty(key) && virtualMethodMap[key] !== undefined && newObj[key] !== undefined) {
+          tasks.push(updateVirtualMethod(obj, virtualMethodMap[key], newObj[key]));
+        }
       }
+
+      // Run the asynchronous tasks.
+      async.series(tasks, function(err, results) {
+        if(err) {
+          next(err);
+        } else {
+
+          preSave(originalObject, obj, function(err, obj) {
+            if(err) {
+              next(err);
+            } else {
+              obj.save(function(err, obj) {
+                if(err) {
+                  next(err);
+                } else {
+                  postSave(originalObject, obj, next);
+                }
+              });
+            }
+          });
+        }
+      });
     });
   };
 };
 
+var preUpdate = function(originalObject, newObj, userId, cb) {
+  if(originalObject['preUpdate']) {
+    originalObject.preUpdate(originalObject, newObj, userId, cb);
+  } else {
+    cb(undefined, newObj);
+  }
+};
+
 var preSave = function(originalObject, newObject, cb) {
-  if(newObject['preUpdate']) {
-    newObject.preUpdate(originalObject, newObject, cb);
+  if(newObject['preSaveUpdate']) {
+    newObject.preSaveUpdate(originalObject, newObject, cb);
   } else {
     cb(undefined, newObject);
   }
 };
 
 var postSave = function(originalObject, newObject, cb) {
-  if(newObject['postUpdate']) {
-    newObject.postUpdate(originalObject, newObject, cb);
+  if(newObject['postSaveUpdate']) {
+    newObject.postSaveUpdate(originalObject, newObject, cb);
   } else {
     cb(undefined, newObject);
   }
@@ -296,7 +307,8 @@ function makeUpdatePropertyMethod(key, type) {
         log.i("Processing '"+key+": "+newValue+"'");
         log.e("Mongoose property type is unknown: " + type);
         // TODO: For now just assume undefined is a date, because mongoose is dumb:
-        value = sanitize.date(newValue);
+        value = newValue;
+        //value = sanitize.date(newValue);
         break;
     }
 
