@@ -47,8 +47,9 @@ var deleteMethod = function(userId, next) {
   log.t("User "+userId+" is deleting schema object.");
 
   if(obj[config.delete.deletedPropertyName] === false) {
-    obj[config.delete.deletedPropertyName] = true;
-    obj.save(next);
+    var update = {};
+    update[config.delete.deletedPropertyName] = true;
+    obj.update(update, userId, next);
   } else {
     log.t("Object is already deleted.");
     next(undefined, obj);
@@ -78,8 +79,9 @@ var undelete = function(userId, next) {
   log.t("User "+userId+" is undeleting schema object.");
 
   if(obj[config.delete.deletedPropertyName] === true) {
-    obj[config.delete.deletedPropertyName] = false;
-    obj.save(next);
+    var update = {};
+    update[config.delete.deletedPropertyName] = false;
+    obj.update(update, userId, next);
   } else {
     log.t("Object is already undeleted.");
     next(undefined, obj);
