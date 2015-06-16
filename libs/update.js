@@ -152,7 +152,7 @@ var update = function(updateMethods, virtualMethodMap) {
           next(err);
         } else {
 
-          preSave(originalObject, obj, function(err, obj) {
+          preSave(originalObject, obj, user, function(err, obj) {
             if(err) {
               next(err);
             } else {
@@ -160,7 +160,7 @@ var update = function(updateMethods, virtualMethodMap) {
                 if(err) {
                   next(err);
                 } else {
-                  postSave(originalObject, obj, next);
+                  postSave(originalObject, obj, user, next);
                 }
               });
             }
@@ -179,15 +179,15 @@ var preUpdate = function(originalObject, newObj, userId, cb) {
   }
 };
 
-var preSave = function(originalObject, newObject, cb) {
+var preSave = function(originalObject, newObject, user, cb) {
   if(newObject['preSaveUpdate']) {
-    newObject.preSaveUpdate(originalObject, newObject, cb);
+    newObject.preSaveUpdate(originalObject, newObject, user, cb);
   } else {
     cb(undefined, newObject);
   }
 };
 
-var postSave = function(originalObject, newObject, cb) {
+var postSave = function(originalObject, newObject, user, cb) {
   if(newObject['postSaveUpdate']) {
     newObject.postSaveUpdate(originalObject, newObject, cb);
   } else {
