@@ -152,7 +152,7 @@ var update = function(updateMethods, virtualMethodMap) {
           next(err);
         } else {
 
-          preSave(originalObject, obj, user, function(err, obj) {
+          preSave(originalObject, obj, userId, function(err, obj) {
             if(err) {
               next(err);
             } else {
@@ -160,7 +160,7 @@ var update = function(updateMethods, virtualMethodMap) {
                 if(err) {
                   next(err);
                 } else {
-                  postSave(originalObject, obj, user, next);
+                  postSave(originalObject, obj, userId, next);
                 }
               });
             }
