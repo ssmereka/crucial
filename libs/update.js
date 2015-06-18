@@ -189,7 +189,7 @@ var preSave = function(originalObject, newObject, user, cb) {
 
 var postSave = function(originalObject, newObject, user, cb) {
   if(newObject['postSaveUpdate']) {
-    newObject.postSaveUpdate(originalObject, newObject, cb);
+    newObject.postSaveUpdate(originalObject, newObject, user, cb);
   } else {
     cb(undefined, newObject);
   }
